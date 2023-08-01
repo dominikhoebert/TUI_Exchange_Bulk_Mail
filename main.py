@@ -13,6 +13,7 @@ from textual.widgets import (
     Select,
     TabbedContent,
     TabPane,
+    Markdown
 )
 from textual.widgets.data_table import ColumnKey, RowKey
 
@@ -202,7 +203,12 @@ class TApp(App):
         self.tabs = TabbedContent()
         with self.tabs:
             with TabPane("Editor", id="editor"):
-                ...
+                self.editor_input = Input(placeholder="Editor", id="editor")
+                self.editor_input.styles.min_height = 10
+                yield self.editor_input
+            with TabPane("Preview", id="preview"):
+                self.preview = Markdown("## Preview")
+                yield self.preview
             with TabPane("Table", id="table"):
                 self.datatable = person_table_from_array(ROWS)
                 self.datatable.cursor_foreground_priority = False
@@ -213,13 +219,11 @@ class TApp(App):
                     options=((h, h) for h in self.datatable.header), name="filter"
                 )
                 yield self.filter_select
-                self.filter_input = Input(placeholder="Filter", name="filter")
+                self.filter_input = Input(placeholder="Filter", id="filter")
                 yield self.filter_input
         yield Footer()
 
     def on_mount(self):
-        self.bind("e", "switch_tab('editor')", description="Editor")
-        self.bind("t", "switch_tab('table')", description="Table")
         self.bind("q", "quit", description="Quit")
 
     def action_switch_tab(self, tab_id: str):
@@ -237,9 +241,16 @@ class TApp(App):
         )
         # self.datatable.filter(self.filter_select.value, self.filter_input.value)
 
-    @on(Input.Submitted)
+    @on(Input.Submitted, "#filter")
     def input_submitted(self, event: Input.Submitted) -> None:
         self.datatable.filter(self.filter_select.value, self.filter_input.value)
+
+    @on(TabbedContent.TabActivated)
+    def tab_activated(self, event: TabbedContent.TabActivated) -> None:
+        if event.tab.id == "preview":
+            self.preview.update(self.editor_input.value)
+        elif event.tab.id == "editor":
+            self.editor_input.focus()
 
 
 if __name__ == "__main__":
