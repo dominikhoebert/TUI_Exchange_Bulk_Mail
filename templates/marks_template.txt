@@ -1,0 +1,6 @@
+subject: Your exam marks!
+Hello **[[firstname]][[lastname]]**,
+
+You scored [[marks]] on your last exam.
+
+Your Teacher!

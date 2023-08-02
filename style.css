@@ -1,0 +1,61 @@
+Sidebar {
+    width: 40;
+    height: 99%;
+    background: $panel;
+    transition: offset 500ms in_out_cubic;
+    layer: overlay;
+
+}
+
+Sidebar.-hidden {
+    offset-x: -100%;
+}
+
+Title {
+    background: $boost;
+    color: $secondary;
+    padding: 2 4;
+    border-right: vkey $background;
+    dock: top;
+    text-align: center;
+    text-style: bold;
+}
+
+#open {
+    background: $primary-darken-3;
+    margin: 1;
+}
+
+.horizontal {
+    layout: horizontal;
+}
+
+.bottom {
+    align-vertical: bottom;
+}
+
+.send-buttons {
+    margin: 1;
+}
+
+.preview-buttons {
+    height: 3;
+    margin: 0 1;
+}
+
+.preview {
+    height: 4;
+}
+
+#preview-selector {
+    width: 12;
+}
+
+Markdown {
+    margin: 1;
+}
+
+#email {
+    width: 30;
+    margin: 1;
+}

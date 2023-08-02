@@ -1,3 +1,5 @@
+from os.path import realpath
+from os import startfile
 from dataclasses import dataclass, field
 from random import randint
 
@@ -13,8 +15,12 @@ from textual.widgets import (
     Select,
     TabbedContent,
     TabPane,
-    Markdown
+    Markdown,
+    DirectoryTree,
+    Static,
+    Button
 )
+from textual.containers import Container
 from textual.widgets.data_table import ColumnKey, RowKey
 
 
@@ -197,34 +203,71 @@ ROWS = [
 ]
 
 
+class Sidebar(Container):
+    pass
+
+
 class TApp(App):
+    CSS_PATH = "style.css"
+    tree_path = "./"
+    filter_column = None
+
     def compose(self) -> ComposeResult:
         yield Header()
+        self.sidebar = Sidebar(classes="-hidden")
+        with self.sidebar:
+            yield Static("Open File")
+            with Container():
+                yield DirectoryTree(self.tree_path, id="tree")
+            yield Static("Table Formats: XLSX, CSV")
+            yield Static("Template Formats: MD, TXT")
+            yield Button("Open Folder", id="open")
         self.tabs = TabbedContent()
-        with self.tabs:
-            with TabPane("Editor", id="editor"):
-                self.editor_input = Input(placeholder="Editor", id="editor")
-                self.editor_input.styles.min_height = 10
-                yield self.editor_input
-            with TabPane("Preview", id="preview"):
-                self.preview = Markdown("## Preview")
-                yield self.preview
-            with TabPane("Table", id="table"):
-                self.datatable = person_table_from_array(ROWS)
-                self.datatable.cursor_foreground_priority = False
-                self.datatable.zebra_stripes = True
-                self.datatable.cursor_type = "row"
-                yield self.datatable
-                self.filter_select = Select(
-                    options=((h, h) for h in self.datatable.header), name="filter"
-                )
-                yield self.filter_select
-                self.filter_input = Input(placeholder="Filter", id="filter")
-                yield self.filter_input
-        yield Footer()
+        with Container():
+            with self.tabs:
+                with TabPane("Editor", id="editor"):
+                    self.editor_input = Input(
+                        placeholder="Editor work in progress", id="editor", disabled=True
+                    )
+                    self.editor_input.styles.min_height = 10
+                    yield self.editor_input
+                with TabPane("Preview", id="preview"):
+                    with Container(classes="horizontal preview"):
+                        self.previous_button = Button("<<", id="previous", classes="preview-buttons")
+                        yield self.previous_button
+                        self.preview_input = Input(placeholder="0", id="preview-selector")
+                        yield self.preview_input
+                        self.next_button = Button(">>", id="next", classes="preview-buttons")
+                        yield self.next_button
+                    self.subject_input = Input(placeholder="Subject", id="subject")
+                    yield self.subject_input
+                    self.preview = Markdown("## Preview")
+                    yield self.preview
+                with TabPane("Table", id="table"):
+                    self.datatable = person_table_from_array(ROWS)
+                    self.datatable.cursor_foreground_priority = False
+                    self.datatable.zebra_stripes = True
+                    self.datatable.cursor_type = "row"
+                    yield self.datatable
+                    self.filter_select = Select(
+                        options=((h, h) for h in self.datatable.header), name="filter"
+                    )
+                    yield self.filter_select
+                    self.filter_input = Input(placeholder="Filter", id="filter")
+                    yield self.filter_input
+            with Container(classes="horizontal bottom"):
+                self.email_select = Select(options=((h, h) for h in self.datatable.header), name="email",
+                                           prompt="Email", id="email")
+                yield self.email_select
+                self.send_all_button = Button("Send All", id="send_all", classes="send-buttons")
+                yield self.send_all_button
+                self.send_preview_button = Button("Send Preview", id="send_preview", classes="send-buttons")
+                yield self.send_preview_button
+            yield Footer()
 
     def on_mount(self):
         self.bind("q", "quit", description="Quit")
+        self.bind("o", "toggle_sidebar", description="Open File")
 
     def action_switch_tab(self, tab_id: str):
         self.tabs.active = tab_id
@@ -235,9 +278,14 @@ class TApp(App):
 
     @on(Select.Changed)
     def select_changed(self, event: Select.Changed) -> None:
+        if self.filter_column is not None:
+            self.datatable.style_column(self.filter_column, style=None)
+        self.filter_column = self.datatable.column_list[
+            self.datatable.header.index(event.value)
+        ]
         self.datatable.style_column(
-            self.datatable.column_list[self.datatable.header.index(event.value)],
-            style=f"color({randint(0, 255)})",
+            self.filter_column,
+            style=f"blue",
         )
         # self.datatable.filter(self.filter_select.value, self.filter_input.value)
 
@@ -247,10 +295,35 @@ class TApp(App):
 
     @on(TabbedContent.TabActivated)
     def tab_activated(self, event: TabbedContent.TabActivated) -> None:
-        if event.tab.id == "preview":
-            self.preview.update(self.editor_input.value)
-        elif event.tab.id == "editor":
-            self.editor_input.focus()
+        # if event.tab.id == "preview":
+        #     self.preview.update(self.editor_input.value)
+        # elif event.tab.id == "editor":
+        #     self.editor_input.focus()
+        ...
+
+    def action_toggle_sidebar(self) -> None:
+        sidebar = self.sidebar
+        self.set_focus(None)
+        if sidebar.has_class("-hidden"):
+            sidebar.remove_class("-hidden")
+        else:
+            if sidebar.query("*:focus"):
+                self.screen.set_focus(None)
+            sidebar.add_class("-hidden")
+
+    @on(Button.Pressed, "#open")
+    def open_folder(self, event: Button.Pressed) -> None:
+        startfile(realpath(self.tree_path))
+
+    @on(DirectoryTree.FileSelected)
+    def file_selected(self, event: DirectoryTree.FileSelected) -> None:
+        # TODO: check if file is table or template, close sidebar, open file in preview or table
+        if str(event.path).endswith(".md") or str(event.path).endswith(".txt"):
+            with open(event.path) as f:
+                self.preview.update(f.read())
+            self.action_toggle_sidebar()
+            self.action_switch_tab("preview")
+        pass
 
 
 if __name__ == "__main__":
