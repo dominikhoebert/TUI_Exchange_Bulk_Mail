@@ -30,3 +30,5 @@ uc-micro-py==1.0.2
 wheel==0.40.0
 yarl==1.9.2
 zipp==3.16.2
+
+pandas~=2.0.3

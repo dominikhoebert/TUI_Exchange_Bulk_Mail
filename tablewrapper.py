@@ -155,7 +155,18 @@ class TableWrapper(DataTable):
 
     def toggle_hide_row(self, row: DataRow):
         row.hidden = not row.hidden
-        self.style_row(row.row_index, style="red strike" if row.hidden else None)
+        if row.hidden:
+            self.hide_row(row)
+        else:
+            self.show_row(row)
+
+    def hide_row(self, row: DataRow):
+        row.hidden = True
+        self.style_row(row.row_index, style="red strike")
+
+    def show_row(self, row: DataRow):
+        row.hidden = False
+        self.style_row(row.row_index, style=None)
 
     def filter(self, column: str, text: str):
         if column not in self.header:
@@ -163,11 +174,9 @@ class TableWrapper(DataTable):
         column_key = self.column_keys[self.header.index(column)]
         for row in self.row_list:
             if text != row.get_by_key(column_key):
-                row.hidden = True
-                self.style_row(row.row_index, style="red strike")
+                self.hide_row(row)
             else:
-                row.hidden = False
-                self.style_row(row.row_index, style=None)
+                self.show_row(row)
 
     def clear(self, columns: bool = False):
         super().clear(columns=columns)

@@ -22,19 +22,6 @@ from textual.widgets import (
 from textual.containers import Container
 import pandas as pd
 
-ROWS = [
-    ("lane", "swimmer", "country", "time"),
-    (4, "Joseph Schooling", "Singapore", 50.39),
-    (2, "Michael Phelps", "United States", 51.14),
-    (5, "Chad le Clos", "South Africa", 51.14),
-    (6, "László Cseh", "Hungary", 51.14),
-    (3, "Li Zhuhao", "China", 51.26),
-    (8, "Mehdy Metella", "France", 51.58),
-    (7, "Tom Shields", "United States", 51.73),
-    (1, "Aleksandr Sadovnikov", "Russia", 51.84),
-    (10, "Darren Burns", "Scotland", 51.84),
-]
-
 
 class Sidebar(Container):
     pass
@@ -44,6 +31,7 @@ class TApp(App):
     CSS_PATH = "style.css"
     tree_path = "./"
     filter_column = None
+    all_none = False
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -80,16 +68,14 @@ class TApp(App):
                     self.all_none_button = Button("All/None", id="all_none")
                     yield self.all_none_button
                     self.datatable = TableWrapper()
-                    #self.datatable.load_array(ROWS)
+                    # self.datatable.load_array(ROWS)
                     self.datatable.cursor_foreground_priority = False
                     self.datatable.zebra_stripes = True
                     self.datatable.cursor_type = "row"
                     yield self.datatable
-                    self.filter_select = Select(
-                        options=((h, h) for h in self.datatable.header), name="filter"
-                    )
+                    self.filter_select = Select(options=(), name="filter", classes="filter", id="filter")
                     yield self.filter_select
-                    self.filter_input = Input(placeholder="Filter", id="filter")
+                    self.filter_input = Input(placeholder="Filter", classes="filter")
                     yield self.filter_input
             with Container(classes="horizontal bottom"):
                 self.email_select = Select(options=((h, h) for h in self.datatable.header), name="email",
@@ -112,17 +98,13 @@ class TApp(App):
     def on_row_selected(self, event: DataTable.RowSelected):
         self.datatable.toggle_hide_row(self.datatable.get_by_key(event.row_key))
 
-    @on(Select.Changed)
+    @on(Select.Changed, "#filter")
     def select_changed(self, event: Select.Changed) -> None:
-        if self.filter_column is not None:
-            self.datatable.style_column(self.filter_column, style=None)
-        self.filter_column = self.datatable.column_list[
-            self.datatable.header.index(event.value)
-        ]
-        self.datatable.style_column(
-            self.filter_column,
-            style=f"blue",
-        )
+        if event.value is not None:
+            if self.filter_column is not None:
+                self.datatable.style_column(self.filter_column, style=None)
+            self.filter_column = self.datatable.column_list[self.datatable.header.index(event.value)]
+            self.datatable.style_column(self.filter_column, style=f"blue")
         # self.datatable.filter(self.filter_select.value, self.filter_input.value)
 
     @on(Input.Submitted, "#filter")
@@ -151,9 +133,18 @@ class TApp(App):
     def open_folder(self, event: Button.Pressed) -> None:
         startfile(realpath(self.tree_path))
 
+    @on(Button.Pressed, "#all_none")
+    def all_none(self, event: Button.Pressed) -> None:
+        if self.all_none:
+            for row in self.datatable.row_list:
+                self.datatable.hide_row(row)
+        else:
+            for row in self.datatable.row_list:
+                self.datatable.show_row(row)
+        self.all_none = not self.all_none
+
     @on(DirectoryTree.FileSelected)
     def file_selected(self, event: DirectoryTree.FileSelected) -> None:
-        # TODO: check if file is table or template, close sidebar, open file in preview or table
         if str(event.path).endswith(".md") or str(event.path).endswith(".txt"):
             with open(event.path) as f:
                 self.preview.update(f.read())
