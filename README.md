@@ -14,7 +14,7 @@ sent to yourself, before sending the bulk mail.
 
 - Docker
 - App Release with PyInstaller
-- Template Editor (when [TextArea Widget](https://textual.textualize.io/roadmap/) is implemented)
+- Template Editor (when [TextArea Widget](https://textual.textualize.io/roadmap/) is implemented) (https://github.com/tconbeer/textual-textarea??)
 
 ### TODO Main Functionality
 

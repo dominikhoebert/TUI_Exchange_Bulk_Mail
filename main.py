@@ -176,9 +176,11 @@ class TApp(App):
 
     def set_preview(self) -> None:
         i = self.preview_input.value
-        i = 0 if (i is None or i == '') else int(i)
-        if i <= len(self.datatable):
-            row = self.datatable[i]
+        i = 0 if (i is None or i == '') else int(i)  # TODO validator for input or check for isnumeric
+        if i == 0:
+            self.preview.update(self.template)
+        elif i <= len(self.datatable):
+            row = self.datatable[i - 1]
             self.preview.update(self.create_message_from_template(self.template, row))
 
     def create_message_from_template(self, template: str, row: DataRow) -> str:
@@ -186,6 +188,18 @@ class TApp(App):
         for key, value in zip(self.datatable.header, row.values):
             message = message.replace(f"[[{key}]]", str(value))
         return message
+
+    @on(Input.Submitted, "#preview-selector")
+    def preview_submitted(self, event: Input.Submitted) -> None:
+        self.set_preview()
+
+    @on(Button.Pressed, "#previous")
+    def previous_pressed(self, event: Button.Pressed) -> None:
+        ...
+
+    @on(Button.Pressed, "#next")
+    def next_pressed(self, event: Button.Pressed) -> None:
+        ...
 
 
 if __name__ == "__main__":
