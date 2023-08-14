@@ -1,5 +1,5 @@
 subject: Your exam marks!
-Hello **[[firstname]][[lastname]]**,
+Hello **[[first_name]] [[last_name]]**,
 
 You scored [[marks]] on your last exam.
 

@@ -116,7 +116,7 @@ class TableWrapper(DataTable):
         return len(self.row_list)
 
     def __getitem__(self, item) -> DataRow:
-        if item is int:
+        if isinstance(item, int):
             return self.get_by_index(item)
         elif item is RowKey:
             return self.get_by_key(item)

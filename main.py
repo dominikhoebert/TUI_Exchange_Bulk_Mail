@@ -1,7 +1,7 @@
 from os.path import realpath
 from os import startfile
 
-from tablewrapper import TableWrapper
+from tablewrapper import TableWrapper, DataRow
 
 from textual import on
 from textual.app import App, ComposeResult
@@ -39,6 +39,7 @@ class TApp(App):
     tree_path = "./"
     filter_column = None
     all_none = False
+    template = "## Preview"
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -154,7 +155,7 @@ class TApp(App):
     def file_selected(self, event: DirectoryTree.FileSelected) -> None:
         if str(event.path).endswith(".md") or str(event.path).endswith(".txt"):
             with open(event.path) as f:
-                self.preview.update(f.read())
+                self.template = f.read()
             self.action_switch_tab("preview")
         elif str(event.path).endswith(".xlsx") or str(event.path).endswith(".csv"):
             if str(event.path).endswith(".xlsx"):
@@ -170,7 +171,21 @@ class TApp(App):
                 self.email_select.value = mail_option
         else:
             return
+        self.set_preview()
         self.action_toggle_sidebar()
+
+    def set_preview(self) -> None:
+        i = self.preview_input.value
+        i = 0 if (i is None or i == '') else int(i)
+        if i <= len(self.datatable):
+            row = self.datatable[i]
+            self.preview.update(self.create_message_from_template(self.template, row))
+
+    def create_message_from_template(self, template: str, row: DataRow) -> str:
+        message = template
+        for key, value in zip(self.datatable.header, row.values):
+            message = message.replace(f"[[{key}]]", str(value))
+        return message
 
 
 if __name__ == "__main__":

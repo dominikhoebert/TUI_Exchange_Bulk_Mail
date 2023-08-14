@@ -1,5 +1,5 @@
 subject: Your grades!
-Hello [[firstname]][[lastname]]!
+Hello [[first_name]] [[last_name]]!
 
 Your grades are:
 **[[grades]]**
