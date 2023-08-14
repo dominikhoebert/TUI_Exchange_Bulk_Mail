@@ -148,23 +148,28 @@ class TApp(App):
             with open(event.path) as f:
                 self.preview.update(f.read())
             self.action_switch_tab("preview")
-        elif str(event.path).endswith(".xlsx"):
-            df = pd.read_excel(event.path, sheet_name=0)
+        elif str(event.path).endswith(".xlsx") or str(event.path).endswith(".csv"):
+            if str(event.path).endswith(".xlsx"):
+                df = pd.read_excel(event.path, sheet_name=0)
+            elif str(event.path).endswith(".csv"):
+                df = pd.read_csv(event.path)
             self.datatable.clear(columns=True)
             self.datatable.load_dataframe(df)
             self.action_switch_tab("table")
-            self.filter_select.options = ((h, h) for h in self.datatable.header)
-            self.email_select.options = ((h, h) for h in self.datatable.header)
-        elif str(event.path).endswith(".csv"):
-            df = pd.read_csv(event.path)
-            self.datatable.clear(columns=True)
-            self.datatable.load_dataframe(df)
-            self.action_switch_tab("table")
-            self.filter_select.options = ((h, h) for h in self.datatable.header)
-            self.email_select.options = ((h, h) for h in self.datatable.header)
+            self.filter_select.set_options(((h, h) for h in self.datatable.header))
+            self.email_select.set_options(((h, h) for h in self.datatable.header))
+            if mail_option := self.find_mail_option(self.datatable.header):
+                self.email_select.value = mail_option
         else:
             return
         self.action_toggle_sidebar()
+
+    def find_mail_option(self, options: list):
+        mail_list = ["mail"," adress", "address"]
+        for option in options:
+            for mail in mail_list:
+                if mail in option.lower():
+                    return option
 
 
 if __name__ == "__main__":
