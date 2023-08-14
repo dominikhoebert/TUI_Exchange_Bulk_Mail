@@ -190,6 +190,9 @@ class TApp(App):
         message = template
         for key, value in zip(self.datatable.header, row.values):
             message = message.replace(f"[[{key}]]", str(value))
+        if row.hidden:
+            hidden_message = "*This message is excluded by filter and will not be sent. Check the table.*"
+            message = hidden_message + "   \n\n" + message + "   \n\n" + hidden_message
         return message
 
     @on(Input.Submitted, "#preview-selector")
