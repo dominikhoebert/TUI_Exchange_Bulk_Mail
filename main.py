@@ -19,6 +19,7 @@ from textual.widgets import (
     Button
 )
 from textual.containers import Container, VerticalScroll
+from textual.validation import Number
 import pandas as pd
 
 
@@ -40,6 +41,7 @@ class TApp(App):
     filter_column = None
     all_none = False
     template = "## Preview"
+    preview_number = 0
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -64,7 +66,8 @@ class TApp(App):
                     with Container(classes="horizontal preview"):
                         self.previous_button = Button("<<", id="previous", classes="preview-buttons")
                         yield self.previous_button
-                        self.preview_input = Input(placeholder="0", id="preview-selector")
+                        self.validator = Number(minimum=0, maximum=0)
+                        self.preview_input = Input(placeholder="0", id="preview-selector", validators=[self.validator])
                         yield self.preview_input
                         self.next_button = Button(">>", id="next", classes="preview-buttons")
                         yield self.next_button
@@ -169,18 +172,18 @@ class TApp(App):
             self.email_select.set_options(((h, h) for h in self.datatable.header))
             if mail_option := find_mail_option(self.datatable.header):
                 self.email_select.value = mail_option
+            self.validator.maximum = len(self.datatable)
         else:
             return
         self.set_preview()
         self.action_toggle_sidebar()
 
     def set_preview(self) -> None:
-        i = self.preview_input.value
-        i = 0 if (i is None or i == '') else int(i)  # TODO validator for input or check for isnumeric
-        if i == 0:
-            self.preview.update(self.template)
-        elif i <= len(self.datatable):
-            row = self.datatable[i - 1]
+        if self.preview_number == 0:
+            preview_text = "*This is the empty template which will not be sent.*   \n\n"
+            self.preview.update(preview_text + self.template)
+        elif self.preview_number <= len(self.datatable):
+            row = self.datatable[self.preview_number - 1]
             self.preview.update(self.create_message_from_template(self.template, row))
 
     def create_message_from_template(self, template: str, row: DataRow) -> str:
@@ -191,15 +194,22 @@ class TApp(App):
 
     @on(Input.Submitted, "#preview-selector")
     def preview_submitted(self, event: Input.Submitted) -> None:
-        self.set_preview()
+        if len(event.validation_result.failures) == 0:
+            self.preview_number = int(event.value)
+            self.set_preview()
 
     @on(Button.Pressed, "#previous")
     def previous_pressed(self, event: Button.Pressed) -> None:
-        ...
+        self.preview_number = self.preview_number - 1 if self.preview_number > 0 else 0
+        self.preview_input.value = str(self.preview_number)
+        self.set_preview()
 
     @on(Button.Pressed, "#next")
     def next_pressed(self, event: Button.Pressed) -> None:
-        ...
+        self.preview_number = self.preview_number + 1 if self.preview_number < len(self.datatable) else len(
+            self.datatable)
+        self.preview_input.value = str(self.preview_number)
+        self.set_preview()
 
 
 if __name__ == "__main__":

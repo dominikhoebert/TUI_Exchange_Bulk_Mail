@@ -25,3 +25,4 @@ sent to yourself, before sending the bulk mail.
 - Send Bulk Mail
 - Send Preview Mail to myself
 - get subject from template
+- get markdown style css closer to html output
