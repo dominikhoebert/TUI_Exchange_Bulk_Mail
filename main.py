@@ -5,7 +5,6 @@ from tablewrapper import TableWrapper
 
 from textual import on
 from textual.app import App, ComposeResult
-
 from textual.widgets import (
     Header,
     Footer,
@@ -19,7 +18,7 @@ from textual.widgets import (
     Static,
     Button
 )
-from textual.containers import Container
+from textual.containers import Container, VerticalScroll
 import pandas as pd
 
 
@@ -65,21 +64,21 @@ class TApp(App):
                     self.preview = Markdown("## Preview")
                     yield self.preview
                 with TabPane("Table", id="table"):
-                    self.all_none_button = Button("All/None", id="all_none")
-                    yield self.all_none_button
-                    self.datatable = TableWrapper()
-                    # self.datatable.load_array(ROWS)
-                    self.datatable.cursor_foreground_priority = False
-                    self.datatable.zebra_stripes = True
-                    self.datatable.cursor_type = "row"
-                    yield self.datatable
-                    self.filter_select = Select(options=(), name="filter", classes="filter", id="filter")
-                    yield self.filter_select
-                    self.filter_input = Input(placeholder="Filter", classes="filter")
-                    yield self.filter_input
-            with Container(classes="horizontal bottom"):
-                self.email_select = Select(options=((h, h) for h in self.datatable.header), name="email",
-                                           prompt="Email", id="email")
+                    with VerticalScroll(id="table_scroll", classes=""):
+                        self.datatable = TableWrapper()
+                        self.datatable.cursor_foreground_priority = False
+                        self.datatable.zebra_stripes = True
+                        self.datatable.cursor_type = "row"
+                        yield self.datatable
+                        with Container(classes="horizontal", id="filter_container"):
+                            self.all_none_button = Button("All/None", id="all_none")
+                            yield self.all_none_button
+                            self.filter_select = Select(options=(), name="filter", classes="filter", id="filter")
+                            yield self.filter_select
+                            self.filter_input = Input(placeholder="Filter", classes="filter")
+                            yield self.filter_input
+            with Container(classes="horizontal bottom", id="bottom_container"):
+                self.email_select = Select(options=(), name="email", prompt="Email", id="email")
                 yield self.email_select
                 self.send_all_button = Button("Send All", id="send_all", classes="send-buttons")
                 yield self.send_all_button
@@ -154,11 +153,15 @@ class TApp(App):
             self.datatable.clear(columns=True)
             self.datatable.load_dataframe(df)
             self.action_switch_tab("table")
+            self.filter_select.options = ((h, h) for h in self.datatable.header)
+            self.email_select.options = ((h, h) for h in self.datatable.header)
         elif str(event.path).endswith(".csv"):
             df = pd.read_csv(event.path)
             self.datatable.clear(columns=True)
             self.datatable.load_dataframe(df)
             self.action_switch_tab("table")
+            self.filter_select.options = ((h, h) for h in self.datatable.header)
+            self.email_select.options = ((h, h) for h in self.datatable.header)
         else:
             return
         self.action_toggle_sidebar()

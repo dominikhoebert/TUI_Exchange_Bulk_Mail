@@ -34,17 +34,13 @@ Title {
     align-vertical: bottom;
 }
 
-.send-buttons {
-    margin: 1;
+.preview {
+    height: 4;
 }
 
 .preview-buttons {
     height: 3;
     margin: 0 1;
-}
-
-.preview {
-    height: 4;
 }
 
 #preview-selector {
@@ -55,11 +51,34 @@ Markdown {
     margin: 1;
 }
 
+TabPane {
+    height: 77vh;
+}
+
+#table_scroll {
+    height: 65vh;
+    margin: 1;
+}
+
+TableWrapper {
+    min-height: 10;
+    height: 50vh;
+    max-height: 30;
+}
+
+.filter {
+    width: 30;
+}
+
 #email {
     width: 30;
     margin: 1;
 }
 
-TableWrapper {
-    height: 10;
+.send-buttons {
+    margin: 1;
+}
+
+#bottom_container {
+    height: auto;
 }
