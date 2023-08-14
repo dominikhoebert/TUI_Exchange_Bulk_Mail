@@ -168,15 +168,30 @@ class TableWrapper(DataTable):
         row.hidden = False
         self.style_row(row.row_index, style=None)
 
+    def show_hide_row(self, row: DataRow, show: bool):
+        if show:
+            self.show_row(row)
+        else:
+            self.hide_row(row)
+
     def filter(self, column: str, text: str):
         if column not in self.header:
             raise ValueError(f"Column {column} not found in {self.header}")
         column_key = self.column_keys[self.header.index(column)]
-        for row in self.row_list:
-            if text != row.get_by_key(column_key):
-                self.hide_row(row)
-            else:
-                self.show_row(row)
+        if text.startswith("<") or text.startswith(">"):
+            if text[1:].isnumeric():
+                n = float(text[1:])
+                for row in self.row_list:
+                    if text[0] == "<":
+                        self.show_hide_row(row, float(row.get_by_key(column_key)) < n)
+                    elif text[0] == ">":
+                        self.show_hide_row(row, float(row.get_by_key(column_key)) > n)
+        else:
+            for row in self.row_list:
+                if text != str(row.get_by_key(column_key)):
+                    self.hide_row(row)
+                else:
+                    self.show_row(row)
 
     def clear(self, columns: bool = False):
         super().clear(columns=columns)

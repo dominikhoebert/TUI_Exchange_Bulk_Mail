@@ -26,6 +26,14 @@ class Sidebar(Container):
     pass
 
 
+def find_mail_option(options: list):
+    mail_list = ["mail", " adress", "address"]
+    for option in options:
+        for mail in mail_list:
+            if mail in option.lower():
+                return option
+
+
 class TApp(App):
     CSS_PATH = "style.css"
     tree_path = "./"
@@ -73,9 +81,9 @@ class TApp(App):
                         with Container(classes="horizontal", id="filter_container"):
                             self.all_none_button = Button("All/None", id="all_none")
                             yield self.all_none_button
-                            self.filter_select = Select(options=(), name="filter", classes="filter", id="filter")
+                            self.filter_select = Select(options=(), name="filter", classes="filter", id="filter-select")
                             yield self.filter_select
-                            self.filter_input = Input(placeholder="Filter", classes="filter")
+                            self.filter_input = Input(placeholder="Filter", classes="filter", id="filter")
                             yield self.filter_input
             with Container(classes="horizontal bottom", id="bottom_container"):
                 self.email_select = Select(options=(), name="email", prompt="Email", id="email")
@@ -97,7 +105,7 @@ class TApp(App):
     def on_row_selected(self, event: DataTable.RowSelected):
         self.datatable.toggle_hide_row(self.datatable.get_by_key(event.row_key))
 
-    @on(Select.Changed, "#filter")
+    @on(Select.Changed, "#filter-select")
     def select_changed(self, event: Select.Changed) -> None:
         if event.value is not None:
             if self.filter_column is not None:
@@ -158,18 +166,11 @@ class TApp(App):
             self.action_switch_tab("table")
             self.filter_select.set_options(((h, h) for h in self.datatable.header))
             self.email_select.set_options(((h, h) for h in self.datatable.header))
-            if mail_option := self.find_mail_option(self.datatable.header):
+            if mail_option := find_mail_option(self.datatable.header):
                 self.email_select.value = mail_option
         else:
             return
         self.action_toggle_sidebar()
-
-    def find_mail_option(self, options: list):
-        mail_list = ["mail"," adress", "address"]
-        for option in options:
-            for mail in mail_list:
-                if mail in option.lower():
-                    return option
 
 
 if __name__ == "__main__":
