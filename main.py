@@ -1,5 +1,6 @@
 from os.path import realpath
 from os import startfile
+import configparser
 
 from tablewrapper import TableWrapper, DataRow
 
@@ -16,10 +17,10 @@ from textual.widgets import (
     Markdown,
     DirectoryTree,
     Static,
-    Button
+    Button, Label
 )
 from textual.containers import Container, VerticalScroll
-from textual.validation import Number
+from textual.validation import Number, Regex
 import pandas as pd
 
 
@@ -42,6 +43,9 @@ class TApp(App):
     all_none = False
     template = "## Preview"
     preview_number = 0
+    email_credential = None
+    password_credential = None
+    config = configparser.ConfigParser()
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -89,6 +93,18 @@ class TApp(App):
                             yield self.filter_select
                             self.filter_input = Input(placeholder="Filter", classes="filter", id="filter")
                             yield self.filter_input
+                with TabPane("Settings", id="settings"):
+                    yield Label("Exchange Credentials")
+                    self.email_validator = Regex(regex=r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$",
+                                                 failure_description="Invalid Email")
+                    self.email_credentials_input = Input(placeholder="Email", id="email_credentials",
+                                                         classes="settings", validators=[self.email_validator])
+                    yield self.email_credentials_input
+                    self.password_credentials_input = Input(placeholder="Password", id="password_credentials",
+                                                            classes="settings", password=True)
+                    yield self.password_credentials_input
+                    self.save_button = Button("Save", id="save", classes="settings")
+                    yield self.save_button
             with Container(classes="horizontal bottom", id="bottom_container"):
                 self.email_select = Select(options=(), name="email", prompt="Email", id="email")
                 yield self.email_select
@@ -97,6 +113,17 @@ class TApp(App):
                 self.send_preview_button = Button("Send Preview", id="send_preview", classes="send-buttons")
                 yield self.send_preview_button
             yield Footer()
+        self.load_credentials()
+
+    def load_credentials(self):
+        try:
+            self.config.read("credentials.ini")
+            self.email_credential = self.config["credentials"]["email"]
+            self.email_credentials_input.value = self.email_credential
+            self.password_credential = self.config["credentials"]["password"]
+            self.password_credentials_input.value = self.password_credential
+        except KeyError:
+            ...
 
     def on_mount(self):
         self.bind("q", "quit", description="Quit")
@@ -213,6 +240,23 @@ class TApp(App):
             self.datatable)
         self.preview_input.value = str(self.preview_number)
         self.set_preview()
+
+    @on(Button.Pressed, "#save")
+    def save_pressed(self, event: Button.Pressed) -> None:
+        self.save_credentials()
+
+    @on(Input.Submitted, ".settings")
+    def settings_submitted(self, event: Input.Submitted) -> None:
+        self.save_credentials()
+
+    def save_credentials(self):
+        self.email_credential = self.email_credentials_input.value
+        self.password_credential = self.password_credentials_input.value
+        self.config["credentials"] = {"email": self.email_credential,
+                                      "password": self.password_credential}
+        with open("credentials.ini", "w") as configfile:
+            self.config.write(configfile)
+        self.notify("Credentials saved")
 
 
 if __name__ == "__main__":

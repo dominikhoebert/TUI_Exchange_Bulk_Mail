@@ -20,9 +20,11 @@ sent to yourself, before sending the bulk mail.
 
 - ~~Filter~~
 - ~~Select Mail Column automatically~~
-- Preview
-- Settings
+- ~~Preview~~
+- ~~Settings~~
 - Send Bulk Mail
 - Send Preview Mail to myself
 - get subject from template
 - get markdown style css closer to html output
+- only send mails to valid email addresses
+- ~~validate email addresses in settings~~

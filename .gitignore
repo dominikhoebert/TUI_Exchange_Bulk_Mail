@@ -254,3 +254,4 @@ cython_debug/
 #.idea/
 
 /data/
+/credentials.ini
