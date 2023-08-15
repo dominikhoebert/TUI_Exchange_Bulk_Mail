@@ -210,3 +210,6 @@ class TableWrapper(DataTable):
         self.header = df.columns
         for row in df.values:
             self.add_data_rows(DataRow(row))
+
+    def count_non_hidden(self):
+        return len([r for r in self.row_list if not r.hidden])

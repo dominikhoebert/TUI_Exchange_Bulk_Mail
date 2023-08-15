@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from os.path import realpath
 from os import startfile
 import configparser
@@ -22,10 +23,20 @@ from textual.widgets import (
 from textual.containers import Container, VerticalScroll
 from textual.validation import Number, Regex
 import pandas as pd
+from exchangelib import DELEGATE, Account, Credentials, Message, HTMLBody
+import markdown
+from markdown.extensions.tables import TableExtension
 
 
 class Sidebar(Container):
     pass
+
+
+@dataclass
+class Email:
+    address: str
+    subject: str
+    message: str
 
 
 def find_mail_option(options: list):
@@ -123,7 +134,7 @@ class TApp(App):
             self.password_credential = self.config["credentials"]["password"]
             self.password_credentials_input.value = self.password_credential
         except KeyError:
-            ...
+            pass
 
     def on_mount(self):
         self.bind("q", "quit", description="Quit")
@@ -143,19 +154,10 @@ class TApp(App):
                 self.datatable.style_column(self.filter_column, style=None)
             self.filter_column = self.datatable.column_list[self.datatable.header.index(event.value)]
             self.datatable.style_column(self.filter_column, style=f"blue")
-        # self.datatable.filter(self.filter_select.value, self.filter_input.value)
 
     @on(Input.Submitted, "#filter")
     def input_submitted(self, event: Input.Submitted) -> None:
         self.datatable.filter(self.filter_select.value, self.filter_input.value)
-
-    @on(TabbedContent.TabActivated)
-    def tab_activated(self, event: TabbedContent.TabActivated) -> None:
-        # if event.tab.id == "preview":
-        #     self.preview.update(self.editor_input.value)
-        # elif event.tab.id == "editor":
-        #     self.editor_input.focus()
-        ...
 
     def action_toggle_sidebar(self) -> None:
         sidebar = self.sidebar
@@ -257,6 +259,48 @@ class TApp(App):
         with open("credentials.ini", "w") as configfile:
             self.config.write(configfile)
         self.notify("Credentials saved")
+
+    @on(Button.Pressed, "#send_all")
+    def send_all_pressed(self, event: Button.Pressed) -> None:
+        if self.email_credential is None or self.password_credential is None:
+            self.notify("Please enter credentials")
+            return
+        if self.subject_input.value == "" or self.subject_input.value is None:
+            self.notify("Please enter a subject")
+            return
+        # TODO send x emails you sure?
+        self.notify("Sending " + str(self.datatable.count_non_hidden()) + " emails")
+        emails = []
+        for row in self.datatable.row_list:
+            if row.hidden is False:
+                # TODO check if email is valid
+                message = self.create_message_from_template(self.template, row)
+                message = markdown.markdown(message, extensions=[TableExtension()])
+                mail = Email(address=row[self.email_select.value], subject=self.subject_input.value, message=message)
+                emails.append(mail)
+        sent_sucessfully = self.send_emails(emails)
+        self.notify(f"{sent_sucessfully} emails sent sucessfully.\n{len(emails) - sent_sucessfully} emails failed.")
+
+    def send_emails(self, emails: list) -> int:
+        credentials = Credentials(username=self.email_credential, password=self.password_credential)
+        exchange_account = Account(
+            primary_smtp_address=self.email_credential, credentials=credentials,
+            autodiscover=True, access_type=DELEGATE
+        )
+
+        message_ids = []
+        for email in emails:
+            message = Message(
+                account=exchange_account,
+                folder=exchange_account.drafts,
+                subject=email.subject,
+                body=HTMLBody(email.message),
+                to_recipients=[email.address]
+            ).save()
+            message_ids.append((message.id, message.changekey))
+
+        result = exchange_account.bulk_send(ids=message_ids)
+        return result.count(True)
 
 
 if __name__ == "__main__":

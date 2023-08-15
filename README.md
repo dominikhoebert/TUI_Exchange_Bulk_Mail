@@ -22,9 +22,10 @@ sent to yourself, before sending the bulk mail.
 - ~~Select Mail Column automatically~~
 - ~~Preview~~
 - ~~Settings~~
-- Send Bulk Mail
+- ~~Send Bulk Mail~~
 - Send Preview Mail to myself
 - get subject from template
 - get markdown style css closer to html output
 - only send mails to valid email addresses
 - ~~validate email addresses in settings~~
+- export mail to pdf
