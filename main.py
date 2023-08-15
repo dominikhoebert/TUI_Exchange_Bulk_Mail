@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from os.path import realpath
 from os import startfile
+import re
 import configparser
 
 from tablewrapper import TableWrapper, DataRow
@@ -47,7 +48,7 @@ def find_mail_option(options: list):
                 return option
 
 
-class TApp(App):
+class BulkMail(App):
     CSS_PATH = "style.css"
     tree_path = "./"
     filter_column = None
@@ -188,6 +189,9 @@ class TApp(App):
         if str(event.path).endswith(".md") or str(event.path).endswith(".txt"):
             with open(event.path) as f:
                 self.template = f.read()
+                if self.template.startswith("subject:"):
+                    self.subject_input.value = self.template.splitlines()[0].replace("subject:", "").strip()
+                    self.template = "\n".join(self.template.splitlines()[1:])
             self.action_switch_tab("preview")
         elif str(event.path).endswith(".xlsx") or str(event.path).endswith(".csv"):
             if str(event.path).endswith(".xlsx"):
@@ -265,15 +269,19 @@ class TApp(App):
         if self.mail_pre_check():
             return
         # TODO send x emails you sure?
-        self.notify("Sending " + str(self.datatable.count_non_hidden()) + " emails")
+        self.notify("Sending " + str(self.datatable.count_non_hidden()) + " emails...")
         emails = []
+        regex = re.compile(r'([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+')
         for row in self.datatable.row_list:
             if row.hidden is False:
-                # TODO check if email is valid
-                message = self.create_message_from_template(self.template, row)
-                message = markdown.markdown(message, extensions=[TableExtension()])
-                mail = Email(address=row[self.email_select.value], subject=self.subject_input.value, message=message)
-                emails.append(mail)
+                email_address = row[self.email_select.value]
+                if re.fullmatch(regex, email_address):
+                    message = self.create_message_from_template(self.template, row)
+                    message = markdown.markdown(message, extensions=[TableExtension()])
+                    mail = Email(address=row[self.email_select.value], subject=self.subject_input.value, message=message)
+                    emails.append(mail)
+                else:
+                    self.notify(f"Skipped invalid Email {email_address}")
         sent_sucessfully = self.send_emails(emails)
         self.notify(f"{sent_sucessfully} emails sent sucessfully.\n{len(emails) - sent_sucessfully} emails failed.")
 
@@ -281,7 +289,7 @@ class TApp(App):
     def send_preview_pressed(self, event: Button.Pressed) -> None:
         if self.mail_pre_check():
             return
-        self.notify("Sending Preview to " + self.email_credential)
+        self.notify("Sending Preview to " + self.email_credential + "...")
         row = self.datatable[self.preview_number - 1]
         message = self.create_message_from_template(self.template, row)
         message = markdown.markdown(message, extensions=[TableExtension()])
@@ -325,5 +333,5 @@ class TApp(App):
 
 
 if __name__ == "__main__":
-    app = TApp()
+    app = BulkMail()
     app.run()
