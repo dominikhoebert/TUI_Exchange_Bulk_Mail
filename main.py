@@ -262,11 +262,7 @@ class TApp(App):
 
     @on(Button.Pressed, "#send_all")
     def send_all_pressed(self, event: Button.Pressed) -> None:
-        if self.email_credential is None or self.password_credential is None:
-            self.notify("Please enter credentials")
-            return
-        if self.subject_input.value == "" or self.subject_input.value is None:
-            self.notify("Please enter a subject")
+        if self.mail_pre_check():
             return
         # TODO send x emails you sure?
         self.notify("Sending " + str(self.datatable.count_non_hidden()) + " emails")
@@ -280,6 +276,31 @@ class TApp(App):
                 emails.append(mail)
         sent_sucessfully = self.send_emails(emails)
         self.notify(f"{sent_sucessfully} emails sent sucessfully.\n{len(emails) - sent_sucessfully} emails failed.")
+
+    @on(Button.Pressed, "#send_preview")
+    def send_preview_pressed(self, event: Button.Pressed) -> None:
+        if self.mail_pre_check():
+            return
+        self.notify("Sending Preview to " + self.email_credential)
+        row = self.datatable[self.preview_number - 1]
+        message = self.create_message_from_template(self.template, row)
+        message = markdown.markdown(message, extensions=[TableExtension()])
+        mail = Email(address=self.email_credential, subject=self.subject_input.value, message=message)
+        sent_sucessfully = self.send_emails([mail])
+        if sent_sucessfully == 1:
+            self.notify("Preview sent sucessfully!")
+
+    def mail_pre_check(self):
+        if self.email_select.value is None or self.email_select.value == "":
+            self.notify("Please select an email column")
+            return True
+        if self.email_credential is None or self.password_credential is None:
+            self.notify("Please enter credentials")
+            return True
+        if self.subject_input.value == "" or self.subject_input.value is None:
+            self.notify("Please enter a subject")
+            return True
+        return False
 
     def send_emails(self, emails: list) -> int:
         credentials = Credentials(username=self.email_credential, password=self.password_credential)

@@ -33,9 +33,9 @@ class DataRow:
         return self.values[self.column_keys.index(key)]
 
     def __getitem__(self, item):
-        if item is int:
+        if isinstance(item, int):
             return self.get_by_index(item)
-        elif item is ColumnKey:
+        elif isinstance(item, ColumnKey):
             return self.get_by_key(item)
         return self.get_by_header(item)
 
@@ -118,7 +118,7 @@ class TableWrapper(DataTable):
     def __getitem__(self, item) -> DataRow:
         if isinstance(item, int):
             return self.get_by_index(item)
-        elif item is RowKey:
+        elif isinstance(item, RowKey):
             return self.get_by_key(item)
         return self.get_by_header(item)
 
