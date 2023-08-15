@@ -167,6 +167,11 @@ class BulkMail(App):
     def on_mount(self):
         self.bind("q", "quit", description="Quit")
         self.bind("o", "toggle_sidebar", description="Open File")
+        self.bind("d", "toggle_dark", description="Toggle Dark mode")
+
+    def action_toggle_dark(self) -> None:
+        """An action to toggle dark mode."""
+        self.dark = not self.dark
 
     def action_switch_tab(self, tab_id: str):
         self.tabs.active = tab_id
