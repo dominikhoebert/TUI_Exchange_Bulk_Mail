@@ -3,6 +3,7 @@ from os.path import realpath
 from os import startfile
 import re
 import configparser
+from datetime import datetime
 
 from textual.reactive import reactive
 from textual.screen import ModalScreen
@@ -30,6 +31,7 @@ import pandas as pd
 from exchangelib import DELEGATE, Account, Credentials, Message, HTMLBody
 import markdown
 from markdown.extensions.tables import TableExtension
+from xhtml2pdf import pisa
 
 
 class Sidebar(Container):
@@ -127,6 +129,10 @@ class BulkMail(App):
                 yield self.send_all_button
                 self.send_preview_button = Button("Send Preview", id="send_preview", classes="send-buttons")
                 yield self.send_preview_button
+                self.export_all_button = Button("Export All", id="export_all", classes="send-buttons")
+                yield self.export_all_button
+                self.export_preview_button = Button("Export Preview", id="export_preview", classes="send-buttons")
+                yield self.export_preview_button
             yield Footer()
         self.load_credentials()
 
@@ -300,7 +306,6 @@ class BulkMail(App):
     def send_all_pressed(self, event: Button.Pressed) -> None:
         if self.mail_pre_check():
             return
-        # TODO send x emails you sure?
         message_screen = self.MessageScreen()
         message_screen.message = "Are you sure you want to send " + str(self.datatable.count_non_hidden()) + " emails?"
         self.push_screen(message_screen)
@@ -368,6 +373,22 @@ class BulkMail(App):
 
         result = exchange_account.bulk_send(ids=message_ids)
         return result.count(True)
+
+    @on(Button.Pressed, "#export_preview")
+    def export_preview_pressed(self, event: Button.Pressed) -> None:
+        if self.mail_pre_check():
+            return
+        filename = datetime.now().strftime("%Y%m%d-%H%M_") + self.subject_input.value + ".pdf"
+        if self.preview_number > 0:
+            row = self.datatable[self.preview_number - 1]
+            message = self.create_message_from_template(self.template, row)
+            message = f"**Recipient:** *{row[self.email_select.value]}*\n\n" + message
+        else:
+            message = f"**Preview**\n\n" + self.template
+        message = markdown.markdown(message, extensions=[TableExtension()])
+        with open(filename, "w+b") as f:
+            pisa_status = pisa.CreatePDF(message + "<hr>", dest=f)
+        self.notify("Exported to PDF!")
 
 
 if __name__ == "__main__":

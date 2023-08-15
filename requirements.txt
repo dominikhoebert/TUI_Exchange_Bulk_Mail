@@ -34,3 +34,4 @@ zipp==3.16.2
 pandas~=2.0.3
 Markdown>=3.4.4
 exchangelib>=5.0.3
+xhtml2pdf>=0.2.11
