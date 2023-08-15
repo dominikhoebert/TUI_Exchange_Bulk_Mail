@@ -94,8 +94,9 @@ class BulkMail(App):
                         yield self.next_button
                     self.subject_input = Input(placeholder="Subject", id="subject")
                     yield self.subject_input
-                    self.preview = Markdown("## Preview")
-                    yield self.preview
+                    with VerticalScroll(id="preview_scroll", classes=""):
+                        self.preview = Markdown("## Preview")
+                        yield self.preview
                 with TabPane("Table", id="table"):
                     with VerticalScroll(id="table_scroll", classes=""):
                         self.datatable = TableWrapper()
