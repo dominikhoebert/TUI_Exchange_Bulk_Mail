@@ -27,5 +27,6 @@ sent to yourself, before sending the bulk mail.
 - ~~Send Preview Mail to myself~~
 - ~~get subject from template~~
 - ~~only send mails to valid email addresses~~
+- toggle dark mode
 - export mail to pdf
 - get markdown style css closer to html output

@@ -4,6 +4,9 @@ from os import startfile
 import re
 import configparser
 
+from textual.reactive import reactive
+from textual.screen import ModalScreen
+
 from tablewrapper import TableWrapper, DataRow
 
 from textual import on
@@ -21,7 +24,7 @@ from textual.widgets import (
     Static,
     Button, Label
 )
-from textual.containers import Container, VerticalScroll
+from textual.containers import Container, VerticalScroll, Horizontal
 from textual.validation import Number, Regex
 import pandas as pd
 from exchangelib import DELEGATE, Account, Credentials, Message, HTMLBody
@@ -126,6 +129,30 @@ class BulkMail(App):
                 yield self.send_preview_button
             yield Footer()
         self.load_credentials()
+
+    class MessageScreen(ModalScreen):
+        CSS_PATH = "MessageScreen.css"
+        message = reactive("")
+
+        def compose(self) -> ComposeResult:
+            yield Container(
+                Static(self.message, classes="message"),
+                Horizontal(
+                    Button("OK", variant="success", id="ok"),
+                    Button("Cancel", variant="error", id="cancel"),
+                    classes="buttons"
+                ),
+                id="dialog",
+            )
+
+    @on(Button.Pressed, "#ok")
+    def ok_button_pressed(self, event: Button.Pressed) -> None:
+        self.app.pop_screen()
+        self.send_all_mails()
+
+    @on(Button.Pressed, "#cancel")
+    def cancel_button_pressed(self, event: Button.Pressed) -> None:
+        self.app.pop_screen()
 
     def load_credentials(self):
         try:
@@ -269,6 +296,11 @@ class BulkMail(App):
         if self.mail_pre_check():
             return
         # TODO send x emails you sure?
+        message_screen = self.MessageScreen()
+        message_screen.message = "Are you sure you want to send " + str(self.datatable.count_non_hidden()) + " emails?"
+        self.push_screen(message_screen)
+
+    def send_all_mails(self):
         self.notify("Sending " + str(self.datatable.count_non_hidden()) + " emails...")
         emails = []
         regex = re.compile(r'([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+')
@@ -278,12 +310,13 @@ class BulkMail(App):
                 if re.fullmatch(regex, email_address):
                     message = self.create_message_from_template(self.template, row)
                     message = markdown.markdown(message, extensions=[TableExtension()])
-                    mail = Email(address=row[self.email_select.value], subject=self.subject_input.value, message=message)
+                    mail = Email(address=row[self.email_select.value], subject=self.subject_input.value,
+                                 message=message)
                     emails.append(mail)
                 else:
                     self.notify(f"Skipped invalid Email {email_address}")
-        sent_sucessfully = self.send_emails(emails)
-        self.notify(f"{sent_sucessfully} emails sent sucessfully.\n{len(emails) - sent_sucessfully} emails failed.")
+        sent_successfully = self.send_emails(emails)
+        self.notify(f"{sent_successfully} emails sent successfully.\n{len(emails) - sent_successfully} emails failed.")
 
     @on(Button.Pressed, "#send_preview")
     def send_preview_pressed(self, event: Button.Pressed) -> None:
