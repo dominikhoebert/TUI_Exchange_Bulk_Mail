@@ -388,7 +388,23 @@ class BulkMail(App):
         message = markdown.markdown(message, extensions=[TableExtension()])
         with open(filename, "w+b") as f:
             pisa_status = pisa.CreatePDF(message + "<hr>", dest=f)
-        self.notify("Exported to PDF!")
+        self.notify("Exported to " + filename)
+
+    @on(Button.Pressed, "#export_all")
+    def export_all_pressed(self, event: Button.Pressed) -> None:
+        if self.mail_pre_check():
+            return
+        filename = datetime.now().strftime("%Y%m%d-%H%M_") + self.subject_input.value + ".pdf"
+        messages = f"{self.datatable.count_non_hidden()}/{len(self.datatable)} Emails\n<hr>\n\n"
+        for row in self.datatable.row_list:
+            if row.hidden is False:
+                message = self.create_message_from_template(self.template, row)
+                message = f"**Recipient:** *{row[self.email_select.value]}*\n\n" + message
+                messages += markdown.markdown(message, extensions=[TableExtension()]) + "\n<hr>\n\n"
+
+        with open(filename, "w+b") as f:
+            pisa_status = pisa.CreatePDF(messages, dest=f)
+        self.notify(f"{self.datatable.count_non_hidden()}/{len(self.datatable)} Emails exported to {filename}")
 
 
 if __name__ == "__main__":
