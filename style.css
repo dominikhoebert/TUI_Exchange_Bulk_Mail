@@ -82,3 +82,13 @@ TableWrapper {
 #bottom_container {
     height: auto;
 }
+
+MarkdownH1 {
+    border: none;
+    content-align: left middle;
+}
+
+MarkdownH2 {
+    border: none;
+    text-align: left;
+}
