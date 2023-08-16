@@ -12,7 +12,7 @@ sent to yourself, before sending the bulk mail.
 
 ## Installation
 
-[Release](/releases)
+[Release](https://github.com/dominikhoebert/TUI_Exchange_Bulk_Mail/releases)
 
 ### Docker
 
