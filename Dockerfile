@@ -1,5 +1,6 @@
 FROM python:3.11-slim
 WORKDIR /app
+ENV COLORTERM=truecolor
 
 # Install dependencies
 COPY requirements.txt requirements.txt

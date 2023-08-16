@@ -25,7 +25,7 @@ Open folder in Docker Release not working.
 
 - ~~App Release with PyInstaller~~
 - ~~Docker~~
-- Color Bug in Docker Release?
+- ~~Color Bug in Docker Release?~~
 - Template Editor (when [TextArea Widget](https://textual.textualize.io/roadmap/) is implemented) (https://github.com/tconbeer/textual-textarea??)
 - Window size bug?
 - credentials.ini --> .settings.ini
