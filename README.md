@@ -10,10 +10,22 @@ or using the colum filter (numbers can be filtered with "<" or ">").
 Open a Mail Template File (TXT, MD) using the File Menu (O-Key), the preview will be displayed. Preview Email can be
 sent to yourself, before sending the bulk mail.
 
+## Installation
+
+[Release](/releases)
+
+### Docker
+
+```bash
+docker run --rm -it -v ${pwd}:/app dominik1220/bulkmail
+```
+Open folder in Docker Release not working.
+
 ## TODO
 
 - ~~App Release with PyInstaller~~
-- Docker
+- ~~Docker~~
+- Color Bug in Docker Release?
 - Template Editor (when [TextArea Widget](https://textual.textualize.io/roadmap/) is implemented) (https://github.com/tconbeer/textual-textarea??)
 - Window size bug?
 - credentials.ini --> .settings.ini
