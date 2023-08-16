@@ -1,6 +1,6 @@
+import os
 from dataclasses import dataclass
 from os.path import realpath
-from os import startfile
 import re
 import configparser
 from datetime import datetime
@@ -211,7 +211,8 @@ class BulkMail(App):
 
     @on(Button.Pressed, "#open")
     def open_folder(self, event: Button.Pressed) -> None:
-        startfile(realpath(self.tree_path))
+        #os.startfile(realpath(self.tree_path))  # Windows
+        os.system(f"open {realpath(self.tree_path)}")  # Mac
 
     @on(Button.Pressed, "#all_none")
     def all_none(self, event: Button.Pressed) -> None:
