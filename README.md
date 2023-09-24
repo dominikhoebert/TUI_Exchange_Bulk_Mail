@@ -26,8 +26,8 @@ Open folder in Docker Release not working.
 - ~~App Release with PyInstaller~~
 - ~~Docker~~
 - ~~Color Bug in Docker Release?~~
-- add help
-- ~~Template Editor ~~(https://github.com/tconbeer/textual-textarea??)~~~~
+- ~~add help~~
+- ~~Template Editor (https://github.com/tconbeer/textual-textarea??)~~
   - ~~save~~
   - ~~open from file~~
   - ~~to preview~~

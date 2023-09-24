@@ -35,6 +35,39 @@ from markdown.extensions.tables import TableExtension
 from xhtml2pdf import pisa
 from textual_textarea import TextArea
 
+help_text = """
+# Usage
+1. Press the `o`-Key (or select "Open File" in the Footer at the bottom) to open files.
+2. Select a Table File (XLSX, CSV).
+    - if no usable file can be found, press "Open Folder" to open the current directory in the file explorer
+        move your files to this directory and try again
+3. Filter the table
+    - Clicking a row to hide/unhide it
+    - Clicking the "All/None" Button to hide/unhide all rows
+    - Selecting a column in the dropdown and typing in the input field to filter the table
+        (e.g. select "Name" and type "John" to only show rows with "John" in the "Name" column)
+        (numbers can be filtered with "<" or ">" e.g. "<100" to only show numbers smaller than 100)
+4. Press the `o`-Key again to open a template file (MD, TXT).
+    - The first line of the template can be a subject (e.g. "subject: Hello World")
+    - Move between the different recipients with the `<<` and `>>` buttons (or type in the input field)
+    - 0 is the empty template which will not be sent
+5. Put in your credentials in the "Settings" tab (full Email Address and Password)
+6. If not automatically selected, select the column with the email addresses in the dropdown
+7. Press the "Send All" Button to send all emails
+   - A confirmation dialog will appear
+* Press the "Send Preview" Button to send the current preview to your email address
+* Press the "Export All" Button to export all emails to a PDF file
+* Press the "Export Preview" Button to export the current preview to a PDF file
+
+### Editor
+
+The editor supports markdown and has a list with all columns of the table.
+You can insert a column by clicking on it in the list.
+Column Names are surrounded by double square brackets (e.g. [[Name]]).
+CTRL+S to save the template.
+
+"""
+
 
 class Sidebar(Container):
     pass
@@ -124,6 +157,8 @@ class BulkMail(App, inherit_bindings=False):
                     yield self.password_credentials_input
                     self.save_button = Button("Save", id="save", classes="settings")
                     yield self.save_button
+                with TabPane("Help", id="help"):
+                    yield Markdown(help_text)
             with Container(classes="horizontal bottom", id="bottom_container"):
                 self.email_select = Select(options=(), name="email", prompt="Email", id="email")
                 yield self.email_select
