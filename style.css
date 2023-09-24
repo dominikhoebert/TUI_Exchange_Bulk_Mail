@@ -92,3 +92,8 @@ MarkdownH2 {
     border: none;
     text-align: left;
 }
+
+ListView {
+    height: 5;
+    margin: 1;
+}

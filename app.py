@@ -23,7 +23,8 @@ from textual.widgets import (
     Markdown,
     DirectoryTree,
     Static,
-    Button, Label
+    Button, Label,
+    ListView, ListItem
 )
 from textual.containers import Container, VerticalScroll, Horizontal
 from textual.validation import Number, Regex
@@ -32,6 +33,7 @@ from exchangelib import DELEGATE, Account, Credentials, Message, HTMLBody
 import markdown
 from markdown.extensions.tables import TableExtension
 from xhtml2pdf import pisa
+from textual_textarea import TextArea
 
 
 class Sidebar(Container):
@@ -53,7 +55,7 @@ def find_mail_option(options: list):
                 return option
 
 
-class BulkMail(App):
+class BulkMail(App, inherit_bindings=False):
     CSS_PATH = "style.css"
     tree_path = "./"
     filter_column = None
@@ -77,12 +79,6 @@ class BulkMail(App):
         self.tabs = TabbedContent()
         with Container():
             with self.tabs:
-                with TabPane("Editor", id="editor"):
-                    self.editor_input = Input(
-                        placeholder="Editor work in progress", id="editor", disabled=True
-                    )
-                    self.editor_input.styles.min_height = 10
-                    yield self.editor_input
                 with TabPane("Preview", id="preview"):
                     with Container(classes="horizontal preview"):
                         self.previous_button = Button("<<", id="previous", classes="preview-buttons")
@@ -111,6 +107,11 @@ class BulkMail(App):
                             yield self.filter_select
                             self.filter_input = Input(placeholder="Filter", classes="filter", id="filter")
                             yield self.filter_input
+                with TabPane("Editor", id="editor"):
+                    self.fields = ListView()
+                    yield self.fields
+                    self.editor_input = TextArea(language="markdown", theme="github-dark")
+                    yield self.editor_input
                 with TabPane("Settings", id="settings"):
                     yield Label("Exchange Credentials")
                     self.email_validator = Regex(regex=r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$",
@@ -183,6 +184,19 @@ class BulkMail(App):
     def action_switch_tab(self, tab_id: str):
         self.tabs.active = tab_id
 
+    @on(TabbedContent.TabActivated)
+    def tab_activated(self, event: TabbedContent.TabActivated):
+        if event.tab.id == "editor":
+            self.editor_input.focus()
+        if event.tab.id == "preview":
+            if self.editor_input.text != self.template:
+                self.template = self.editor_input.text
+                self.set_preview()
+
+    @on(ListView.Selected)
+    def listview_selected(self, event: ListView.Selected) -> None:
+        print(event.item.text)
+
     @on(DataTable.RowSelected)
     def on_row_selected(self, event: DataTable.RowSelected):
         self.datatable.toggle_hide_row(self.datatable.get_by_key(event.row_key))
@@ -211,8 +225,8 @@ class BulkMail(App):
 
     @on(Button.Pressed, "#open")
     def open_folder(self, event: Button.Pressed) -> None:
-        #os.startfile(realpath(self.tree_path))  # Windows
-        os.system(f"open {realpath(self.tree_path)}")  # Mac
+        os.startfile(realpath(self.tree_path))  # Windows
+        # os.system(f"open {realpath(self.tree_path)}")  # Mac
 
     @on(Button.Pressed, "#all_none")
     def all_none(self, event: Button.Pressed) -> None:
@@ -243,11 +257,15 @@ class BulkMail(App):
             self.action_switch_tab("table")
             self.filter_select.set_options(((h, h) for h in self.datatable.header))
             self.email_select.set_options(((h, h) for h in self.datatable.header))
+            self.fields.clear()
+            for header in self.datatable.header:
+                self.fields.append(ListItem(Label(header)))
             if mail_option := find_mail_option(self.datatable.header):
                 self.email_select.value = mail_option
             self.validator.maximum = len(self.datatable)
         else:
             return
+        self.editor_input.text = self.template
         self.set_preview()
         self.action_toggle_sidebar()
 
