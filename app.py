@@ -24,7 +24,7 @@ from textual.widgets import (
     DirectoryTree,
     Static,
     Button, Label,
-    ListView, ListItem
+    OptionList
 )
 from textual.containers import Container, VerticalScroll, Horizontal
 from textual.validation import Number, Regex
@@ -108,7 +108,7 @@ class BulkMail(App, inherit_bindings=False):
                             self.filter_input = Input(placeholder="Filter", classes="filter", id="filter")
                             yield self.filter_input
                 with TabPane("Editor", id="editor"):
-                    self.fields = ListView()
+                    self.fields = OptionList()
                     yield self.fields
                     self.editor_input = TextArea(language="markdown", theme="github-dark")
                     yield self.editor_input
@@ -164,7 +164,7 @@ class BulkMail(App, inherit_bindings=False):
 
     def load_credentials(self):
         try:
-            self.config.read("credentials.ini")
+            self.config.read(".settings.ini")
             self.email_credential = self.config["credentials"]["email"]
             self.email_credentials_input.value = self.email_credential
             self.password_credential = self.config["credentials"]["password"]
@@ -193,9 +193,10 @@ class BulkMail(App, inherit_bindings=False):
                 self.template = self.editor_input.text
                 self.set_preview()
 
-    @on(ListView.Selected)
-    def listview_selected(self, event: ListView.Selected) -> None:
-        print(event.item.text)
+    @on(OptionList.OptionSelected)
+    def option_selected(self, event: OptionList.OptionSelected):
+        print(event.option.prompt)
+        self.editor_input.insert_text_at_selection("[[" + str(event.option.prompt) + "]]")
 
     @on(DataTable.RowSelected)
     def on_row_selected(self, event: DataTable.RowSelected):
@@ -257,9 +258,8 @@ class BulkMail(App, inherit_bindings=False):
             self.action_switch_tab("table")
             self.filter_select.set_options(((h, h) for h in self.datatable.header))
             self.email_select.set_options(((h, h) for h in self.datatable.header))
-            self.fields.clear()
-            for header in self.datatable.header:
-                self.fields.append(ListItem(Label(header)))
+            self.fields.clear_options()
+            self.fields.add_options([h for h in self.datatable.header])
             if mail_option := find_mail_option(self.datatable.header):
                 self.email_select.value = mail_option
             self.validator.maximum = len(self.datatable)
@@ -318,7 +318,7 @@ class BulkMail(App, inherit_bindings=False):
         self.password_credential = self.password_credentials_input.value
         self.config["credentials"] = {"email": self.email_credential,
                                       "password": self.password_credential}
-        with open("credentials.ini", "w") as configfile:
+        with open(".settings.ini", "w") as configfile:
             self.config.write(configfile)
         self.notify("Credentials saved")
 

@@ -27,13 +27,13 @@ Open folder in Docker Release not working.
 - ~~Docker~~
 - ~~Color Bug in Docker Release?~~
 - add help
-- Template Editor ~~(https://github.com/tconbeer/textual-textarea??)~~
+- ~~Template Editor ~~(https://github.com/tconbeer/textual-textarea??)~~~~
   - ~~save~~
   - ~~open from file~~
   - ~~to preview~~
-  - insert field
+  - ~~insert field~~
 - Window size bug?
-- credentials.ini --> .settings.ini
+- ~~credentials.ini --> .settings.ini~~
 - command pallette
 
 ### TODO Main Functionality

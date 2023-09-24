@@ -93,7 +93,7 @@ MarkdownH2 {
     text-align: left;
 }
 
-ListView {
+OptionList {
     height: 5;
     margin: 1;
 }
